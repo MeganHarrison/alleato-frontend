@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { ProjectCard } from '@/components/projects/project-card';
 import { Project, transformProjectForUI } from '@/types/project';
 import { supabase } from '@/lib/supabase';
-import type { Database } from '@/types/supabase';
+// import type { Database } from '@/types/supabase';
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
