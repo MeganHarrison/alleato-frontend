@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { ProjectCard } from '@/components/projects/project-card';
-import { Project, ProjectsResponse } from '@/types/project';
+import { Project, transformProjectForUI } from '@/types/project';
+import { supabase } from '@/lib/supabase';
+import type { Database } from '@/types/supabase';
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -17,24 +19,42 @@ export default function ProjectsPage() {
         setLoading(true);
         setError(null);
         
-        // Build query parameters
-        const params = new URLSearchParams();
-        if (filter !== 'all') params.append('status', filter);
-        params.append('sort_by', sortBy);
-        params.append('limit', '50');
+        // Build Supabase query
+        let query = supabase
+          .from('project')
+          .select('*');
         
-        // TEMPORARILY HARDCODED FOR TESTING - Replace with environment variable
-        const apiUrl = 'https://intelligencesystem-production.up.railway.app';
-        const response = await fetch(`${apiUrl}/api/projects?${params}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        // Apply filters
+        if (filter !== 'all') {
+          query = query.eq('status', filter);
         }
         
-        const data: ProjectsResponse = await response.json();
-
-        if (data && data.projects) {
-          setProjects(data.projects);
+        // Apply sorting
+        if (sortBy === 'name') {
+          query = query.order('name');
+        } else if (sortBy === 'status') {
+          query = query.order('status');
+        } else if (sortBy === 'priority') {
+          query = query.order('priority');
+        } else if (sortBy === 'created_at') {
+          query = query.order('created_at', { ascending: false });
+        } else {
+          query = query.order('updated_at', { ascending: false });
+        }
+        
+        // Apply limit
+        query = query.limit(50);
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          throw new Error(`Supabase error: ${error.message}`);
+        }
+        
+        if (data) {
+          // Transform database projects to UI format
+          const transformedProjects = data.map(transformProjectForUI);
+          setProjects(transformedProjects);
         } else {
           setError('No projects data received');
         }

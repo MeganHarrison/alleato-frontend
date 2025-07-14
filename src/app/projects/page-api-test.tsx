@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { ProjectCard } from '@/components/projects/project-card';
 import { Project, ProjectsResponse } from '@/types/project';
 
-export default function ProjectsPage() {
+export default function ProjectsPageAPITest() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export default function ProjectsPage() {
         params.append('sort_by', sortBy);
         params.append('limit', '50');
         
-        // TEMPORARILY HARDCODED FOR TESTING - Replace with environment variable
+        // HARDCODED API URL FOR TESTING
         const apiUrl = 'https://intelligencesystem-production.up.railway.app';
         const response = await fetch(`${apiUrl}/api/projects?${params}`);
         
@@ -77,6 +77,7 @@ export default function ProjectsPage() {
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Failed to Load Projects</h1>
           <p className="text-gray-600 mb-4">{error}</p>
+          <p className="text-sm text-gray-500 mb-4">Using hardcoded API: https://intelligencesystem-production.up.railway.app</p>
           <button 
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -93,9 +94,9 @@ export default function ProjectsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Projects (API Test)</h1>
           <p className="mt-2 text-gray-600">
-            Manage and monitor your project portfolio
+            Testing with hardcoded API URL
           </p>
         </div>
 
