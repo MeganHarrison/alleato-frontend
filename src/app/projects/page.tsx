@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { ProjectCard } from '@/components/projects/project-card';
-import { Project, ProjectsResponse } from '@/types/project';
+import { Project, transformProjectForUI } from '@/types/project';
+import { supabase } from '@/lib/supabase';
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -17,24 +18,47 @@ export default function ProjectsPage() {
         setLoading(true);
         setError(null);
         
-        // Build query parameters
-        const params = new URLSearchParams();
-        if (filter !== 'all') params.append('status', filter);
-        params.append('sort_by', sortBy);
-        params.append('limit', '50');
-        
-        // TEMPORARILY HARDCODED FOR TESTING - Replace with environment variable
-        const apiUrl = 'https://intelligencesystem-production.up.railway.app';
-        const response = await fetch(`${apiUrl}/api/projects?${params}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        // Check if Supabase is configured
+        if (!supabase) {
+          throw new Error('Supabase not configured. Please set NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.');
         }
         
-        const data: ProjectsResponse = await response.json();
-
-        if (data && data.projects) {
-          setProjects(data.projects);
+        // Build Supabase query
+        let query = supabase
+          .from('project')
+          .select('*');
+        
+        // Apply filters
+        if (filter !== 'all') {
+          query = query.eq('status', filter);
+        }
+        
+        // Apply sorting
+        if (sortBy === 'name') {
+          query = query.order('name');
+        } else if (sortBy === 'status') {
+          query = query.order('status');
+        } else if (sortBy === 'priority') {
+          query = query.order('priority');
+        } else if (sortBy === 'created_at') {
+          query = query.order('created_at', { ascending: false });
+        } else {
+          query = query.order('updated_at', { ascending: false });
+        }
+        
+        // Apply limit
+        query = query.limit(50);
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          throw new Error(`Supabase error: ${error.message}`);
+        }
+        
+        if (data) {
+          // Transform database projects to UI format
+          const transformedProjects = data.map(transformProjectForUI);
+          setProjects(transformedProjects);
         } else {
           setError('No projects data received');
         }
@@ -77,6 +101,20 @@ export default function ProjectsPage() {
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Failed to Load Projects</h1>
           <p className="text-gray-600 mb-4">{error}</p>
+          {error.includes('NEXT_PUBLIC_SUPABASE_ANON_KEY') && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 max-w-md mx-auto">
+              <h3 className="font-medium text-yellow-800 mb-2">Configuration Required</h3>
+              <p className="text-sm text-yellow-700 mb-2">
+                To connect to Supabase, you need to:
+              </p>
+              <ol className="text-sm text-yellow-700 text-left list-decimal list-inside space-y-1">
+                <li>Go to your Supabase Dashboard</li>
+                <li>Navigate to Settings → API</li>
+                <li>Copy your &quot;anon public&quot; key</li>
+                <li>Set NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel</li>
+              </ol>
+            </div>
+          )}
           <button 
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"

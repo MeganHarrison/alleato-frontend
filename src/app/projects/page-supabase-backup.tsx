@@ -20,7 +20,7 @@ export default function ProjectsPage() {
         setError(null);
         
         // Build Supabase query
-        let query = supabase
+        let query = supabase!
           .from('project')
           .select('*');
         
