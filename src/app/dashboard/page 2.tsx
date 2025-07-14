@@ -24,7 +24,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchHealth = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/health');
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/health`);
         setHealthData(response.data);
         setError(null);
       } catch (err) {

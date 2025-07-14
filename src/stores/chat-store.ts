@@ -56,7 +56,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     try {
       // Send to backend API
-      const response = await axios.post('http://localhost:8000/api/chat/message', {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/chat/message`, {
         message: content,
         context: null,
         client_id: 'dashboard-client'
@@ -97,7 +97,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       // Create WebSocket connection for real-time updates
       const clientId = 'dashboard-client';
-      const wsUrl = `ws://localhost:8000/ws/${clientId}`;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const wsUrl = `${apiUrl.replace('http', 'ws')}/ws/${clientId}`;
       
       console.log('Attempting to connect to WebSocket:', wsUrl);
       const newSocket = new WebSocket(wsUrl);
